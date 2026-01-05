@@ -1,0 +1,133 @@
+<html>
+<head>
+<title>Anime Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <h1>Anime Tracker</h1>
+  <input id="searchInput" placeholder="Search anime..."
+    onkeydown="if(event.key==='Enter')searchAnime()">
+</header>
+
+<div class="container">
+
+  <div class="sidebar">
+    <h3>My Collection</h3>
+    <input id="userId" type="number" value="1">
+    <button onclick="loadCollection()">Load Collection</button>
+    <div id="collectionBox"></div>
+  </div>
+
+  <div class="main" id="animeGrid"></div>
+</div>
+
+<script>
+const ANIME_API = "http://udinbanda.theokaitou.my.id";
+const COLLECTION_API = "http://saber.theokaitou.my.id";
+
+async function loadCollection() {
+  const userId = document.getElementById("userId").value;
+  const res = await fetch(`${COLLECTION_API}/collection/${userId}`);
+  const data = await res.json();
+
+  const box = document.getElementById("collectionBox");
+  box.innerHTML = "";
+
+  for (const item of data.items) {
+    const animeRes = await fetch(`${ANIME_API}/anime/${item.itemId}`);
+    const anime = await animeRes.json();
+
+    const div = document.createElement("div");
+    div.className = "collection-item";
+
+    div.innerHTML = `
+      <img src="${anime.data.image_url}">
+      <div class="collection-info">
+        <b>${anime.data.title}</b>
+        <span>Status: ${item.status}</span>
+        <span>Progress: ${item.progress ?? 0}</span>
+        <button class="remove-btn"
+          onclick="removeFromCollection(${item.itemId})">
+          Remove
+        </button>
+      </div>
+    `;
+
+    box.appendChild(div);
+  }
+}
+
+async function addToCollection(animeId) {
+  const userId = Number(document.getElementById("userId").value);
+
+  await fetch(`${COLLECTION_API}/collection/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      itemId: animeId,
+      mediaType: "anime",
+      source: "external-api"
+    })
+  });
+
+  loadCollection();
+}
+
+async function removeFromCollection(animeId) {
+  const userId = Number(document.getElementById("userId").value);
+
+  await fetch(`${COLLECTION_API}/collection/remove`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      itemId: animeId,
+      mediaType: "anime"
+    })
+  });
+
+  loadCollection();
+}
+
+async function searchAnime() {
+  const q = document.getElementById("searchInput").value;
+  const res = await fetch(`${ANIME_API}/anime?q=${encodeURIComponent(q)}`);
+  const json = await res.json();
+  renderAnime(json.data);
+}
+
+function renderAnime(list) {
+  const grid = document.getElementById("animeGrid");
+  grid.innerHTML = "";
+
+  list.forEach(a => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <img src="${a.image_url}">
+      <div class="info">
+        <h4>${a.title}</h4>
+        <p>Score: ${a.score ?? "-"}</p>
+        <button class="details-btn"
+          onclick="alert('Detail bisa dikembangkan')">
+          Details
+        </button>
+        <button class="add-btn"
+          onclick="addToCollection(${a.animeID})">
+          + Add to Collection
+        </button>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+</script>
+
+</body>
+</html>
