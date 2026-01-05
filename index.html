@@ -114,7 +114,7 @@ function renderAnime(list) {
         <h4>${a.title}</h4>
         <p>Score: ${a.score ?? "-"}</p>
         <button class="details-btn"
-          onclick="alert('Detail bisa dikembangkan')">
+          onclick="window.location.href='detail.html?id=${a.animeID}'">
           Details
         </button>
         <button class="add-btn"
