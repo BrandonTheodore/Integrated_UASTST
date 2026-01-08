@@ -1,9 +1,9 @@
-FROM nginx:alpine
+FROM busybox
 
-RUN rm /etc/nginx/conf.d/default.conf
-
-COPY index.html /usr/share/nginx/html/index.html
+WORKDIR /www
+COPY index.html .
+COPY detail.html .
+COPY style.css .
 
 EXPOSE 9696
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["httpd", "-f", "-p", "9696"]
